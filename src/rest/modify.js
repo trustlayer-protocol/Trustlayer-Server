@@ -9,6 +9,8 @@ const { InvalidArgumentError } = require('../utils/errors');
 const router = express.Router();
 
 const processLinkedInRequest = async (code, state) => {
+  const stateObject = JSON.parse(state);
+
   const result = await validateUser(code);
 
   const user = result;
