@@ -14,12 +14,29 @@ const {
   createNewAction,
   getActionByLink,
 } = require('../db/action');
+const pool = require('../db/');
 const {
   ResourceNotFound,
 } = require('../utils/errors');
 const {
   ACTION,
+  TABLES,
 } = require('../utils/enums');
+
+
+const generateUniqueLink = async (table, prepend) => {
+  const { rows } = await pool().query(`select link from ${table}`);
+  let link;
+  let duplicateRows;
+  do {
+    link = `${prepend}${nanoid(10)}`;
+
+    // eslint-disable-next-line no-loop-func
+    duplicateRows = rows.filter(row => row.link === link);
+  } while (duplicateRows.length > 0);
+
+  return link;
+};
 
 
 const createAction = async (userId, action, formId) => {
@@ -28,12 +45,13 @@ const createAction = async (userId, action, formId) => {
   if (!form) throw new ResourceNotFound(`form with id: ${formId} not found`);
   const { hash } = form;
 
+  const link = await generateUniqueLink(TABLES.ACTIONS, 'H');
   const data = {
     userId,
     action,
     formHash: hash,
     formId,
-    link: `H${nanoid(10)}`,
+    link,
     created: new Date().getTime(),
   };
 
@@ -62,15 +80,17 @@ const createAdoptionByLink = async (userId, link) => {
 
 
 const checkAndCreateUser = async (email, avatarUrl) => {
+  const user = await getUserByEmail(email);
+  if (user) return user;
+
+  const link = generateUniqueLink(TABLES.USERS, 'U');
   const data = {
     email,
     avatarUrl,
-    link: `U${nanoid(10)}`,
+    link,
     created: new Date().getTime(),
   };
 
-  const user = await getUserByEmail(email);
-  if (user) return user;
 
   const newUser = await insertUser(data);
 
