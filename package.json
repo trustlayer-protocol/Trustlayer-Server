@@ -7,6 +7,9 @@
   "author": "Trustbot Software",
   "license": "GNU General Public License v3.0",
   "private": false,
+  "scripts": {
+    "start": "node src/app.js"
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",

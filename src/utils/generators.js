@@ -14,6 +14,9 @@ const {
   createNewAction,
   getActionByLink,
 } = require('../db/action');
+const {
+  insertAgreement,
+} = require('../db/agreement');
 const pool = require('../db/');
 const {
   ResourceNotFound,
@@ -68,14 +71,40 @@ const createAdoptionByFormId = async (userId, formId) => {
 };
 
 
-const createAdoptionByLink = async (userId, link) => {
+const createAgreement = async (user1Id, user2Id, formId, formHash) => {
+  const link = await generateUniqueLink(TABLES.AGREEMENTS, 'A');
+
+  const agreement = {
+    user1Id,
+    user2Id,
+    formId,
+    formHash,
+    link,
+    created: new Date().getTime(),
+  };
+
+  return insertAgreement(agreement);
+};
+
+
+const createAdoptionAndAgreementFromLink = async (userId, link) => {
   const linkAdoption = await getActionByLink(link);
   if (!linkAdoption) throw new ResourceNotFound(`adoption with link: '${link}' not found`);
 
-  const { form_id: formId } = linkAdoption;
-  const adoption = await createAdoptionByFormId(userId, formId);
+  const {
+    form_id: formId,
+    user_id: adoptionUserId,
+    form_hash: formHash,
+  } = linkAdoption;
 
-  return adoption;
+  const newAdoption = await createAdoptionByFormId(userId, formId);
+  const newAgreement = await createAgreement(adoptionUserId, userId, formId, formHash);
+
+
+  return {
+    adoption: newAdoption,
+    agreement: newAgreement,
+  };
 };
 
 
@@ -83,7 +112,7 @@ const checkAndCreateUser = async (email, avatarUrl) => {
   const user = await getUserByEmail(email);
   if (user) return user;
 
-  const link = generateUniqueLink(TABLES.USERS, 'U');
+  const link = await generateUniqueLink(TABLES.USERS, 'U');
   const data = {
     email,
     avatarUrl,
@@ -113,5 +142,5 @@ module.exports = {
   checkAndCreateUser,
   checkAndCreateForm,
   createAdoptionByFormId,
-  createAdoptionByLink,
+  createAdoptionAndAgreementFromLink,
 };

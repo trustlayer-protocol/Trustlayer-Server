@@ -5,7 +5,7 @@ const { validateUser } = require('../requests/linkedin');
 const {
   checkAndCreateUser,
   createAdoptionByFormId,
-  createAdoptionByLink,
+  createAdoptionAndAgreementFromLink,
 } = require('../utils/generators');
 const { InvalidArgumentError, AuthenticationError } = require('../utils/errors');
 const { ACTION } = require('../utils/enums');
@@ -21,7 +21,8 @@ const completeAction = async (userId, { action, link, form_id: formId }) => {
       resultAction = await createAdoptionByFormId(userId, formId);
     }
     if (link) {
-      resultAction = await createAdoptionByLink(userId, link);
+      const { adoption } = await createAdoptionAndAgreementFromLink(userId, link);
+      resultAction = adoption;
     }
   }
 
