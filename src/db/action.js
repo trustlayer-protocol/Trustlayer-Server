@@ -1,6 +1,22 @@
 const pool = require('./index');
 
 
+const getActionsForUser = async (userId, type = null, limit = null) => {
+  let queryText = `SELECT * from actions where user_id = ${userId}`;
+  if (type) {
+    queryText += ` and type = '${type}'`;
+  }
+  queryText += ' order by created desc';
+  if (limit) {
+    queryText += ` limit ${limit}`;
+  }
+
+  const result = await pool().query(queryText);
+
+  return result.rows;
+};
+
+
 const getActionByLink = async (link) => {
   const result = await pool().query('SELECT * from actions where link = $1', [link]);
 
@@ -27,4 +43,5 @@ const createNewAction = async ({
 module.exports = {
   createNewAction,
   getActionByLink,
+  getActionsForUser,
 };

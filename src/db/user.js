@@ -8,6 +8,13 @@ const getUserByEmail = async (email) => {
 };
 
 
+const getByLink = async (link) => {
+  const result = await pool().query('SELECT * from users where link = $1', [link]);
+
+  return result.rows[0];
+};
+
+
 const insertUser = async ({
   email,
   avatarUrl,
@@ -25,4 +32,5 @@ const insertUser = async ({
 module.exports = {
   insertUser,
   getUserByEmail,
+  getByLink,
 };
