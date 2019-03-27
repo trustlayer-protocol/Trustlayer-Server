@@ -1,7 +1,11 @@
 const express = require('express');
 const { getAllForms, getFormById } = require('../db/form');
 const { getActionsForUser } = require('../db/action');
-const { getByLink } = require('../db/user');
+const {
+  getByLink: getUserByLink,
+  getById: getUserById,
+} = require('../db/user');
+const { getByLink: getAgreementByLink } = require('../db/agreement');
 const { ResourceNotFound } = require('../utils/errors');
 
 
@@ -35,7 +39,7 @@ router.get('/default-form', async (req, res, next) => {
 
 
 const getUserData = async (link) => {
-  const user = await getByLink(link);
+  const user = await getUserByLink(link);
   if (!user) {
     throw new ResourceNotFound('User not found');
   }
@@ -60,9 +64,40 @@ const getUserData = async (link) => {
 };
 
 
+const getAgreementData = async (link) => {
+  const agreement = await getAgreementByLink(link);
+  if (!agreement) {
+    throw new ResourceNotFound('Agreement not found.');
+  }
+  const {
+    form_id: formId,
+    user_1_id: user1Id,
+    user_2_id: user2Id,
+  } = agreement;
+
+  const form = await getFormById(formId);
+  const user1 = await getUserById(user1Id);
+  const user2 = await getUserById(user2Id);
+  const result = {
+    agreement,
+    form,
+    user1,
+    user2,
+  };
+
+  return result;
+};
+
+
 router.get('/user/:link', async (req, res, next) => {
   const { link } = req.params;
   processRequest(getUserData(link), res, next);
+});
+
+
+router.get('/agreement/:link', async (req, res, next) => {
+  const { link } = req.params;
+  processRequest(getAgreementData(link), res, next);
 });
 
 

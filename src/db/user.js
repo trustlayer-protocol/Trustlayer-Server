@@ -15,6 +15,13 @@ const getByLink = async (link) => {
 };
 
 
+const getById = async (id) => {
+  const result = await pool().query('SELECT * from users where id = $1', [id]);
+
+  return result.rows[0];
+};
+
+
 const insertUser = async ({
   email,
   avatarUrl,
@@ -33,4 +40,5 @@ module.exports = {
   insertUser,
   getUserByEmail,
   getByLink,
+  getById,
 };
