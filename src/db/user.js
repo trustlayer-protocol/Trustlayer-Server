@@ -8,15 +8,12 @@ const getUserByEmail = async (email) => {
 };
 
 
-const createNewUser = async ({
+const insertUser = async ({
   email,
   avatarUrl,
   link,
   created,
 }) => {
-  const user = await getUserByEmail(email);
-  if (user) return user;
-
   const values = [email, avatarUrl, link, created];
   const queryText = 'INSERT INTO users(email, avatar_url, link, created) VALUES($1, $2, $3, $4) RETURNING *';
   const result = await pool().query(queryText, values);
@@ -26,5 +23,6 @@ const createNewUser = async ({
 
 
 module.exports = {
-  createNewUser,
+  insertUser,
+  getUserByEmail,
 };
