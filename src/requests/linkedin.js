@@ -3,7 +3,7 @@ const qs = require('querystring');
 
 
 const AUTH_URL = 'https://www.linkedin.com/oauth/v2/accessToken';
-const REDIRECT_URI = 'http://localhost:3001/modify/linkedin';
+const REDIRECT_URI = 'http://localhost:3002/modify/linkedin';
 const CLIENT_ID = '78bo5ls26ov71s';
 const PROFILE_URL = 'https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))';
 const EMAIL_URL = 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))';
