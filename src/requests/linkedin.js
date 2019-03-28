@@ -40,10 +40,14 @@ const authorizedRequest = async (url, method, accessToken, data = {}) => (
 const getUserAvatarUrl = async (accessToken) => {
   const result = await authorizedRequest(PROFILE_URL, 'get', accessToken);
 
-  const { elements } = result.data.profilePicture['displayImage~'];
-  const { identifier: profileUrl } = elements[0].identifiers[0];
+  if (result.data && result.data.profilePicture) {
+    const { elements } = result.data.profilePicture['displayImage~'];
+    const { identifier: profileUrl } = elements[0].identifiers[0];
 
-  return profileUrl;
+    return profileUrl;
+  }
+
+  return '';
 };
 
 
