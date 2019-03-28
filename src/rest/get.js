@@ -1,5 +1,9 @@
 const express = require('express');
-const { getAllForms, getFormById } = require('../db/form');
+const {
+  getAllForms,
+  getFormById,
+  getAvatarsOfFormAdopters,
+} = require('../db/form');
 const { getActionsForUser } = require('../db/action');
 const {
   getByLink: getUserByLink,
@@ -13,8 +17,8 @@ const router = express.Router();
 
 const processRequest = (promise, res, next) => {
   promise
-    .then((form) => {
-      res.locals.result = form;
+    .then((result) => {
+      res.locals.result = result;
       next();
     })
     .catch((err) => {
@@ -29,7 +33,13 @@ const getDefaultForm = async () => {
     throw new ResourceNotFound('No forms found');
   }
 
-  return forms[0];
+  const form = forms[0];
+  const { id: formId } = form;
+  const avatars = await getAvatarsOfFormAdopters(formId);
+  return {
+    form,
+    avatars,
+  };
 };
 
 

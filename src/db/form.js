@@ -1,6 +1,16 @@
 const pool = require('./index');
 
 
+const getAvatarsOfFormAdopters = async (formId) => {
+  const queryText = `select DISTINCT usr.id, usr.avatar_url from users usr, actions action 
+  where action.form_id = ${formId} and action.user_id = usr.id and action.action = 'adopt' ORDER BY usr.id`;
+
+  const result = await pool().query(queryText);
+
+  return result.rows;
+};
+
+
 const getAllForms = async () => {
   const result = await pool().query('SELECT * from forms');
 
@@ -36,4 +46,5 @@ module.exports = {
   getFormByHash,
   getFormById,
   getAllForms,
+  getAvatarsOfFormAdopters,
 };
