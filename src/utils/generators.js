@@ -1,4 +1,3 @@
-
 const nanoid = require('nanoid');
 const md5 = require('md5');
 const {
@@ -19,6 +18,7 @@ const {
 } = require('../db/agreement');
 const pool = require('../db/');
 const {
+  InvalidArgumentError,
   ResourceNotFound,
 } = require('../utils/errors');
 const {
@@ -42,7 +42,7 @@ const generateUniqueLink = async (table, prepend) => {
 };
 
 
-const createAction = async (userId, action, formId) => {
+const createAction = async (userId, action, formId, ip) => {
   const form = await getFormById(formId);
 
   if (!form) throw new ResourceNotFound(`form with id: ${formId} not found`);
@@ -55,6 +55,7 @@ const createAction = async (userId, action, formId) => {
     formHash: hash,
     formId,
     link,
+    ip,
     created: new Date().getTime(),
   };
 
@@ -64,15 +65,15 @@ const createAction = async (userId, action, formId) => {
 };
 
 
-const createAdoptionByFormId = async (userId, formId) => {
-  const adoption = await createAction(userId, ACTION.ADOPT, formId);
+const createAdoptionByFormId = async (userId, formId, ip) => {
+  const adoption = await createAction(userId, ACTION.ADOPT, formId, ip);
 
   return adoption;
 };
 
 
-const createRevocationByFormId = async (userId, formId) => {
-  const revocation = await createAction(userId, ACTION.REVOKE, formId);
+const createRevocationByFormId = async (userId, formId, ip) => {
+  const revocation = await createAction(userId, ACTION.REVOKE, formId, ip);
 
   return revocation;
 };
@@ -94,9 +95,10 @@ const createAgreement = async (user1Id, user2Id, formId, formHash) => {
 };
 
 
-const createAdoptionAndAgreementFromLink = async (userId, link) => {
+const createAdoptionAndAgreementFromLink = async (userId, link, ip) => {
   const linkAdoption = await getActionByLink(link);
   if (!linkAdoption) throw new ResourceNotFound(`adoption with link: '${link}' not found`);
+  if (linkAdoption.user_id === userId) throw new InvalidArgumentError('Cannot adopt with your own link');
 
   const {
     form_id: formId,
@@ -104,12 +106,13 @@ const createAdoptionAndAgreementFromLink = async (userId, link) => {
     form_hash: formHash,
   } = linkAdoption;
 
-  const newAdoption = await createAdoptionByFormId(userId, formId);
+  const newAdoption = await createAdoptionByFormId(userId, formId, ip);
   const newAgreement = await createAgreement(adoptionUserId, userId, formId, formHash);
 
 
   return {
-    adoption: newAdoption,
+    linkAdoption,
+    newAdoption,
     agreement: newAgreement,
   };
 };

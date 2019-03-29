@@ -31,9 +31,10 @@ const createNewAction = async ({
   action,
   link,
   created,
+  ip,
 }) => {
-  const values = [formId, formHash, userId, action, link, created];
-  const queryText = 'INSERT INTO actions(form_id, form_hash, user_id, action, link, created) VALUES($1, $2, $3, $4, $5, $6) RETURNING *';
+  const values = [formId, formHash, userId, action, link, ip, created];
+  const queryText = 'INSERT INTO actions(form_id, form_hash, user_id, action, link, ip, created) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *';
   const result = await pool().query(queryText, values);
 
   return result.rows[0];

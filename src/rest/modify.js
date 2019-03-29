@@ -16,13 +16,13 @@ const { ACTION } = require('../utils/enums');
 const router = express.Router();
 
 
-const completeAction = async (user, { action, link, form_id: formId }) => {
+const completeAction = async (user, stateObject) => {
   let actionResult;
-  const { id: userId, link: userLink, email: userEmail } = user;
+  const { action, link } = stateObject;
   if (action === ACTION.ADOPT) {
-    actionResult = await adoption(link, formId, userId, userEmail, userLink);
+    actionResult = await adoption(stateObject, user);
   } else if (action === ACTION.REVOKE) {
-    actionResult = await revocation(link, userId, userLink, userEmail);
+    actionResult = await revocation(link, user);
   }
 
   return actionResult;
@@ -36,7 +36,6 @@ const parseStateParam = (state) => {
   if (!action || (!link && !formId)) {
     throw new InvalidArgumentError('\'state\' param does not have \'action\' or \'link\' or \'form_id\' properties');
   }
-
 
   return stateObject;
 };
@@ -52,11 +51,12 @@ const validateUser = async (code) => {
 };
 
 
-const processLinkedInRequest = async (code, state) => {
+const processLinkedInRequest = async (code, state, ip) => {
   const validationResult = await validateUser(code);
   const { email, profile } = validationResult;
 
   const stateObject = parseStateParam(state);
+  stateObject.ip = ip;
 
   const user = await checkAndCreateUser(email, profile);
   const { link: userLink } = user;
@@ -71,10 +71,21 @@ const processLinkedInRequest = async (code, state) => {
 };
 
 
+const getRemoteIpAddress = (req) => {
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  if (ip === '::1') {
+    ip = '127.0.0.1';
+  }
+
+  return ip;
+};
+
+
 router.get('/linkedin', (req, res, next) => validateParams(req, next, 'code', 'state'),
   async (req, res, next) => {
     const { code, state } = req.query;
-    processLinkedInRequest(code, state)
+    const ip = getRemoteIpAddress(req);
+    processLinkedInRequest(code, state, ip)
       .then((result) => {
         const redirectUrl = url.format({
           query: result,
