@@ -115,14 +115,22 @@ const createAdoptionAndAgreementFromLink = async (userId, link) => {
 };
 
 
-const checkAndCreateUser = async (email, avatarUrl) => {
+const checkAndCreateUser = async (email, profile) => {
   const user = await getUserByEmail(email);
   if (user) return user;
+
+  const { firstName, lastName, avatarUrl } = profile;
+
+  let fullName;
+  if (firstName || lastName) {
+    fullName = `${firstName || ''} ${lastName || ''}`.trim();
+  }
 
   const link = await generateUniqueLink(TABLES.USERS, 'U');
   const data = {
     email,
     avatarUrl,
+    fullName,
     link,
     created: new Date().getTime(),
   };

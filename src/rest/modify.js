@@ -54,18 +54,18 @@ const validateUser = async (code) => {
 
 const processLinkedInRequest = async (code, state) => {
   const validationResult = await validateUser(code);
-  const { email, avatarUrl } = validationResult;
+  const { email, profile } = validationResult;
 
   const stateObject = parseStateParam(state);
 
-  const user = await checkAndCreateUser(email, avatarUrl);
+  const user = await checkAndCreateUser(email, profile);
   const { link: userLink } = user;
 
   const resultAction = await completeAction(user, stateObject);
   return {
     ...resultAction,
     email,
-    avatarUrl,
+    profile,
     userLink,
   };
 };

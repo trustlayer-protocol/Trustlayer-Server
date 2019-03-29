@@ -1,11 +1,14 @@
 const axios = require('axios');
 const qs = require('querystring');
+const {
+  AuthenticationError,
+} = require('../utils/errors');
 
 
 const AUTH_URL = 'https://www.linkedin.com/oauth/v2/accessToken';
 const REDIRECT_URI = 'http://localhost:3002/modify/linkedin';
 const CLIENT_ID = '78bo5ls26ov71s';
-const PROFILE_URL = 'https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))';
+const PROFILE_URL = 'https://api.linkedin.com/v2/me?projection=(firstName,lastName,profilePicture(displayImage~:playableStreams))';
 const EMAIL_URL = 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))';
 
 
@@ -37,17 +40,31 @@ const authorizedRequest = async (url, method, accessToken, data = {}) => (
 );
 
 
-const getUserAvatarUrl = async (accessToken) => {
+const getUserProfile = async (accessToken) => {
   const result = await authorizedRequest(PROFILE_URL, 'get', accessToken);
 
-  if (result.data && result.data.profilePicture) {
-    const { elements } = result.data.profilePicture['displayImage~'];
-    const { identifier: profileUrl } = elements[0].identifiers[0];
-
-    return profileUrl;
+  if (!result.data) {
+    throw new AuthenticationError('Error extracting user\'s profile');
   }
 
-  return '';
+  const { firstName, lastName, profilePicture } = result.data;
+
+  const profile = {};
+  if (firstName) {
+    const { en_US: firstNameValue } = firstName.localized;
+    profile.firstName = firstNameValue;
+  }
+  if (lastName) {
+    const { en_US: lastNameValue } = lastName.localized;
+    profile.lastName = lastNameValue;
+  }
+  if (profilePicture) {
+    const { elements } = profilePicture['displayImage~'];
+    const { identifier: avatarUrl } = elements[0].identifiers[0];
+    profile.avatarUrl = avatarUrl;
+  }
+
+  return profile;
 };
 
 
@@ -61,10 +78,10 @@ const getUserEmail = async (accessToken) => {
 
 const validateUser = async (code) => {
   const { data: { access_token: accessToken } } = await sendValidationRequest(code);
-  const avatarUrl = await getUserAvatarUrl(accessToken);
+  const profile = await getUserProfile(accessToken);
   const email = await getUserEmail(accessToken);
 
-  return { avatarUrl, email };
+  return { profile, email };
 };
 
 

@@ -27,9 +27,10 @@ const insertUser = async ({
   avatarUrl,
   link,
   created,
+  fullName,
 }) => {
-  const values = [email, avatarUrl, link, created];
-  const queryText = 'INSERT INTO users(email, avatar_url, link, created) VALUES($1, $2, $3, $4) RETURNING *';
+  const values = [email, avatarUrl, link, fullName, created];
+  const queryText = 'INSERT INTO users(email, avatar_url, link, full_name, created) VALUES($1, $2, $3, $4, $5) RETURNING *';
   const result = await pool().query(queryText, values);
 
   return result.rows[0];
