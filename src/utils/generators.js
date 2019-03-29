@@ -71,6 +71,13 @@ const createAdoptionByFormId = async (userId, formId) => {
 };
 
 
+const createRevocationByFormId = async (userId, formId) => {
+  const revocation = await createAction(userId, ACTION.REVOKE, formId);
+
+  return revocation;
+};
+
+
 const createAgreement = async (user1Id, user2Id, formId, formHash) => {
   const link = await generateUniqueLink(TABLES.AGREEMENTS, 'A');
 
@@ -142,5 +149,6 @@ module.exports = {
   checkAndCreateUser,
   checkAndCreateForm,
   createAdoptionByFormId,
+  createRevocationByFormId,
   createAdoptionAndAgreementFromLink,
 };

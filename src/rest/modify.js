@@ -4,40 +4,25 @@ const { validateParams } = require('../utils/validator');
 const { validateUser: validateWithLinkedIn } = require('../requests/linkedin');
 const {
   checkAndCreateUser,
-  createAdoptionByFormId,
-  createAdoptionAndAgreementFromLink,
 } = require('../utils/generators');
-const {
-  sendAdoptionEmail,
+const adoption = require('../actions/adoption');
+const revocation = require('../actions/revocation');
 
-} = require('../email');
+
 const { InvalidArgumentError, AuthenticationError } = require('../utils/errors');
 const { ACTION } = require('../utils/enums');
 
 
 const router = express.Router();
 
-const completeAdoption = async (adoptionLink, formId, userId, userEmail, userLink) => {
-  let resultAction;
-  if (!adoptionLink && formId) {
-    resultAction = await createAdoptionByFormId(userId, formId);
-  }
-  if (adoptionLink) {
-    const { adoption } = await createAdoptionAndAgreementFromLink(userId, adoptionLink);
-    resultAction = adoption;
-  }
-  const { link: newAdoptionLink } = resultAction;
-  sendAdoptionEmail(userEmail, newAdoptionLink, userLink);
-
-  return resultAction;
-};
-
 
 const completeAction = async (user, { action, link, form_id: formId }) => {
   let actionResult;
   const { id: userId, link: userLink, email: userEmail } = user;
   if (action === ACTION.ADOPT) {
-    actionResult = await completeAdoption(link, formId, userId, userEmail, userLink);
+    actionResult = await adoption(link, formId, userId, userEmail, userLink);
+  } else if (action === ACTION.REVOKE) {
+    actionResult = await revocation(link, userId, userLink, userEmail);
   }
 
   return actionResult;

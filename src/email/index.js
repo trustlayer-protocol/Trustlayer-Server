@@ -2,6 +2,8 @@ const axios = require('axios');
 const qs = require('querystring');
 const {
   buildAdoptionEmail,
+  buildAgreementEmail,
+  buildRevocationEmail,
 } = require('./emailBuilder');
 
 
@@ -26,6 +28,20 @@ const requestMailgun = (to, subject, htmlBody) => {
 };
 
 
+const sendAgreementEmail = async (to, otherEmail, agreementLinkl) => {
+  const emailContent = buildAgreementEmail(otherEmail, agreementLinkl);
+  const { title, body } = emailContent;
+
+  return requestMailgun(to, title, body);
+};
+
+
+const sendAgreementEmails = async (user1Email, user2Email, agreementLinkl) => {
+  sendAgreementEmail(user1Email, user2Email, agreementLinkl);
+  sendAgreementEmail(user2Email, user1Email, agreementLinkl);
+};
+
+
 const sendAdoptionEmail = async (to, adoptionLink, userLink) => {
   const emailContent = buildAdoptionEmail(adoptionLink, userLink);
   const { title, body } = emailContent;
@@ -34,6 +50,16 @@ const sendAdoptionEmail = async (to, adoptionLink, userLink) => {
 };
 
 
+const sendRevocationEmail = async (to, userLink) => {
+  const emailContent = buildRevocationEmail(userLink);
+  const { title, body } = emailContent;
+
+  return requestMailgun(to, title, body);
+};
+
+
 module.exports = {
   sendAdoptionEmail,
+  sendAgreementEmails,
+  sendRevocationEmail,
 };
