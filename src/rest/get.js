@@ -87,11 +87,13 @@ const getAgreementData = async (link) => {
   const form = await getFormById(formId);
   const user1 = await getUserById(user1Id);
   const user2 = await getUserById(user2Id);
+  const avatars = await getAvatarsOfFormAdopters(formId);
   const result = {
     agreement,
     form,
     user1,
     user2,
+    avatars,
   };
 
   return result;

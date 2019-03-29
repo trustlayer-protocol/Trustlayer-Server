@@ -1,9 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const modify = require('./rest/modify');
 const get = require('./rest/get');
 const { initializePool } = require('./db');
-require('dotenv').config();
 
 
 const app = express();

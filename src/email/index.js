@@ -1,5 +1,5 @@
-const axios = require('axios');
-const qs = require('querystring');
+const { MAILGUN_DOMAIN, MAILGUN_KEY, MAILGUN_FROM } = process.env;
+const mailgun = require('mailgun-js')({ apiKey: MAILGUN_KEY, domain: MAILGUN_DOMAIN });
 const {
   buildAdoptionEmail,
   buildAgreementEmail,
@@ -7,38 +7,34 @@ const {
 } = require('./emailBuilder');
 
 
-const requestMailgun = (to, subject, htmlBody) => {
-  const { MAILGUN_URL, MAILGUN_KEY, MAILGUN_FROM } = process.env;
-
+const requestMailgun = (to, subject, htmlBody, attachment = null) => {
   const data = {
     from: MAILGUN_FROM,
     to,
-    html: htmlBody,
     subject,
+    html: htmlBody,
   };
-  return axios.post(MAILGUN_URL, qs.stringify(data), {
-    auth: {
-      username: 'api',
-      password: MAILGUN_KEY,
-    },
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
+
+  if (attachment) {
+    data.attachment = attachment;
+  }
+
+  return mailgun.messages().send(data);
 };
 
 
-const sendAgreementEmail = async (to, otherEmail, agreementLinkl) => {
+const sendAgreementEmail = async (to, otherEmail, agreementLinkl, attch) => {
   const emailContent = buildAgreementEmail(otherEmail, agreementLinkl);
   const { title, body } = emailContent;
 
-  return requestMailgun(to, title, body);
+  return requestMailgun(to, title, body, attch);
 };
 
 
-const sendAgreementEmails = async (user1Email, user2Email, agreementLinkl) => {
-  sendAgreementEmail(user1Email, user2Email, agreementLinkl);
-  sendAgreementEmail(user2Email, user1Email, agreementLinkl);
+const sendAgreementEmails = async (user1Email, user2Email, agreementLink, buffer) => {
+  const attch = new mailgun.Attachment({ data: buffer, filename: `${agreementLink}.pdf` });
+  sendAgreementEmail(user1Email, user2Email, agreementLink, attch);
+  sendAgreementEmail(user2Email, user1Email, agreementLink, attch);
 };
 
 

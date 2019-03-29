@@ -19,45 +19,70 @@ const {
 } = require('../aws/nda-upload');
 
 
-const uploadAgreementPDF = async (formId, agreementId) => {
+const markedPromise = formMarkup => new Promise((resolve, reject) => {
+  marked(formMarkup, async (error, result) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(result);
+    }
+  });
+});
+
+
+const uploadAgreementPDF = async (
+  agreementId,
+  linkAdoption,
+  adoption,
+  linkUserEmail,
+  userEmail,
+) => {
+  const { form_id: formId } = adoption;
+
   const form = await getFormById(formId);
   const { content: formMarkup } = form;
-  marked(formMarkup, async (error, result) => {
-    const buffer = await convertToPdf(result);
-    uploadToS3(buffer, agreementId);
-  });
+  const html = await markedPromise(formMarkup, linkAdoption, adoption, linkUserEmail, userEmail);
+  const buffer = await convertToPdf(html, linkAdoption, adoption, linkUserEmail, userEmail);
+  uploadToS3(buffer, agreementId);
+
+  return buffer;
 };
 
 
-const completeAdoptionFromLink = async (userId, userEmail, adoptionLink) => {
+const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => {
   const {
-    adoption,
+    linkAdoption,
+    newAdoption,
     agreement,
-  } = await createAdoptionAndAgreementFromLink(userId, adoptionLink);
-  const resultAction = adoption;
+  } = await createAdoptionAndAgreementFromLink(userId, adoptionLink, ip);
   const {
     id: agreementId,
     link: agreementLink,
-    user_1_id: adoptionUserId,
   } = agreement;
-  const adoptionUser = await getUserbyId(adoptionUserId);
-  const { email: adoptionUserEmail } = adoptionUser;
-  sendAgreementEmails(adoptionUserEmail, userEmail, agreementLink);
-  const { form_id: formId } = adoption;
+  const {
+    user_id: linkUserId,
+  } = linkAdoption;
 
-  uploadAgreementPDF(formId, agreementId);
+  const linkUser = await getUserbyId(linkUserId);
+  const { email: linkUserEmail } = linkUser;
 
-  return resultAction;
+  const buffer = await uploadAgreementPDF(agreementId, linkAdoption,
+    newAdoption, linkUserEmail, userEmail);
+  sendAgreementEmails(linkUserEmail, userEmail, agreementLink, buffer);
+
+  return newAdoption;
 };
 
 
-const completeAdoption = async (adoptionLink, formId, userId, userEmail, userLink) => {
+const completeAdoption = async (stateObject, user) => {
   let resultAction;
-  if (!adoptionLink && formId) {
-    resultAction = await createAdoptionByFormId(userId, formId);
+  const { link, form_id: formId, ip } = stateObject;
+  const { id: userId, email: userEmail, link: userLink } = user;
+  if (!link && formId) {
+    resultAction = await createAdoptionByFormId(userId, formId, ip);
   }
-  if (adoptionLink) {
-    resultAction = await completeAdoptionFromLink(userId, userEmail, adoptionLink);
+  if (link) {
+    resultAction = await completeAdoptionFromLink(userId, userEmail, link, ip);
   }
   const { link: newAdoptionLink } = resultAction;
   sendAdoptionEmail(userEmail, newAdoptionLink, userLink);
