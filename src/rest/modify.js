@@ -81,11 +81,14 @@ const getRemoteIpAddress = (req) => {
 };
 
 
-router.get('/linkedin', (req, res, next) => validateParams(req, next, 'code', 'state'),
+router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
   async (req, res, next) => {
-    const { code, state } = req.query;
+    const { code, state, error } = req.query;
+    if (error) {
+      return res.redirect(`http://localhost:3000/sso-fail?message=${error}`);
+    }
     const ip = getRemoteIpAddress(req);
-    processLinkedInRequest(code, state, ip)
+    return processLinkedInRequest(code, state, ip)
       .then((result) => {
         const redirectUrl = url.format({
           query: result,
