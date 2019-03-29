@@ -54,19 +54,18 @@ const getUserData = async (link) => {
     throw new ResourceNotFound('User not found');
   }
   const { id: userId } = user;
-  const actions = await getActionsForUser(userId, null, 1);
-  const mostRecentAction = actions[0];
+  const actions = await getActionsForUser(userId, null, null);
 
   const result = {
     user,
-    recent_action: mostRecentAction,
+    actions,
   };
 
-  if (!mostRecentAction) {
+  if (!actions || actions.length <= 0) {
     return result;
   }
 
-  const { form_id: formId } = mostRecentAction;
+  const { form_id: formId } = actions[0];
   const form = await getFormById(formId);
   result.recent_form = form;
 

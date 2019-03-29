@@ -48,7 +48,7 @@ const createAction = async (userId, action, formId) => {
   if (!form) throw new ResourceNotFound(`form with id: ${formId} not found`);
   const { hash } = form;
 
-  const link = await generateUniqueLink(TABLES.ACTIONS, 'H');
+  const link = await generateUniqueLink(TABLES.ACTIONS, 'D');
   const data = {
     userId,
     action,
