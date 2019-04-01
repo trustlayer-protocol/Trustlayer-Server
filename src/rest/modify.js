@@ -23,7 +23,7 @@ const completeAction = async (user, stateObject) => {
   if (action === ACTION.ADOPT) {
     actionResult = await adoption(stateObject, user);
   } else if (action === ACTION.REVOKE) {
-    actionResult = await revocation(link, user);
+    actionResult = await revocation(stateObject, user);
   } else if (action === ACTION.PDF) {
     actionResult = await getPdf(link, user.email);
   }
