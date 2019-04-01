@@ -9,7 +9,7 @@ const adoption = require('../actions/adoption');
 const revocation = require('../actions/revocation');
 
 
-const { InvalidArgumentError, AuthenticationError } = require('../utils/errors');
+const { InvalidArgumentError } = require('../utils/errors');
 const { ACTION } = require('../utils/enums');
 
 
@@ -41,18 +41,8 @@ const parseStateParam = (state) => {
 };
 
 
-const validateUser = async (code) => {
-  const validationResult = await validateWithLinkedIn(code);
-  if (!validationResult || !validationResult.email) {
-    throw new AuthenticationError('Error validating user credentials');
-  }
-
-  return validationResult;
-};
-
-
 const processLinkedInRequest = async (code, state, ip) => {
-  const validationResult = await validateUser(code);
+  const validationResult = await validateWithLinkedIn(code);
   const { email, profile } = validationResult;
 
   const stateObject = parseStateParam(state);

@@ -1,6 +1,10 @@
 const pool = require('./index');
 
 
+// const getUserEmailsForAgreement = async (link) => {
+
+// };
+
 const getByLink = async (link) => {
   const result = await pool().query('SELECT * from agreements where link = $1', [link]);
 
