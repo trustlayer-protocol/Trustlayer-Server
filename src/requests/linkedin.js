@@ -6,7 +6,12 @@ const {
 
 
 const AUTH_URL = 'https://www.linkedin.com/oauth/v2/accessToken';
-const REDIRECT_URI = 'http://localhost:8081/modify/linkedin';
+const DEV_REDIRECT_URI = 'http://localhost:8081/modify/linkedin';
+const PRODUCTION_REDIRECT_URI = 'https://trustlayerapi.trustbot.io/modify/linkedin';
+
+const REDIRECT_URI = process.env.NODE_ENV === 'production' ? PRODUCTION_REDIRECT_URI : DEV_REDIRECT_URI;
+console.log(`linked in redirect uri: ${REDIRECT_URI}`);
+
 const CLIENT_ID = '78bo5ls26ov71s';
 const PROFILE_URL = 'https://api.linkedin.com/v2/me?projection=(firstName,lastName,profilePicture(displayImage~:playableStreams))';
 const EMAIL_URL = 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))';
