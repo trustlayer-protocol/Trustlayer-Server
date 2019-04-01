@@ -7,9 +7,10 @@ const {
 } = require('../utils/generators');
 const adoption = require('../actions/adoption');
 const revocation = require('../actions/revocation');
+const getPdf = require('../actions/get-agreement-pdf');
 
 
-const { InvalidArgumentError, AuthenticationError } = require('../utils/errors');
+const { InvalidArgumentError } = require('../utils/errors');
 const { ACTION } = require('../utils/enums');
 
 
@@ -23,6 +24,8 @@ const completeAction = async (user, stateObject) => {
     actionResult = await adoption(stateObject, user);
   } else if (action === ACTION.REVOKE) {
     actionResult = await revocation(link, user);
+  } else if (action === ACTION.PDF) {
+    actionResult = await getPdf(link, user.email);
   }
 
   return actionResult;
@@ -41,22 +44,10 @@ const parseStateParam = (state) => {
 };
 
 
-const validateUser = async (code) => {
+const processLinkedInRequest = async (code, stateObject) => {
   const validationResult = await validateWithLinkedIn(code);
-  if (!validationResult || !validationResult.email) {
-    throw new AuthenticationError('Error validating user credentials');
-  }
-
-  return validationResult;
-};
-
-
-const processLinkedInRequest = async (code, state, ip) => {
-  const validationResult = await validateUser(code);
   const { email, profile } = validationResult;
 
-  const stateObject = parseStateParam(state);
-  stateObject.ip = ip;
 
   const user = await checkAndCreateUser(email, profile);
   const { link: userLink } = user;
@@ -88,12 +79,19 @@ router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
       return res.redirect(`http://localhost:3000/sso-fail?message=${error}`);
     }
     const ip = getRemoteIpAddress(req);
-    return processLinkedInRequest(code, state, ip)
+    const stateObject = parseStateParam(state);
+    stateObject.ip = ip;
+    return processLinkedInRequest(code, stateObject)
       .then((result) => {
+        const { action } = stateObject;
+        if (action === ACTION.PDF) {
+          res.contentType('application/pdf');
+          return res.end(result.Body, 'binary');
+        }
         const redirectUrl = url.format({
           query: result,
         });
-        res.redirect(`http://localhost:3000/sso-success${redirectUrl}`);
+        return res.redirect(`http://localhost:3000/sso-success${redirectUrl}`);
       })
       .catch((err) => {
         next(err);

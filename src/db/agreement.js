@@ -1,6 +1,15 @@
 const pool = require('./index');
 
 
+const getUserEmailsForAgreement = async (link) => {
+  const queryText = `select usr1.email as email1, usr2.email as email2, ag.id from users usr1,
+   users usr2, agreements ag where ag.link = '${link}' and usr1.id = ag.user_1_id and usr2.id = ag.user_2_id`;
+
+  const result = await pool().query(queryText);
+
+  return result.rows[0];
+};
+
 const getByLink = async (link) => {
   const result = await pool().query('SELECT * from agreements where link = $1', [link]);
 
@@ -25,4 +34,5 @@ const insertAgreement = async ({
 module.exports = {
   insertAgreement,
   getByLink,
+  getUserEmailsForAgreement,
 };

@@ -22,6 +22,7 @@
     "md5": "^2.2.1",
     "moment": "^2.24.0",
     "nanoid": "^2.0.1",
+    "phantomjs-prebuilt": "2.1.4",
     "pg": "^7.9.0",
     "querystring": "^0.2.0",
     "truffle": "^5.0.8"
