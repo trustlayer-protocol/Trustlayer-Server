@@ -65,5 +65,5 @@ const errorHandling = (err, req, res, next) => {
 app.use(errorHandling);
 
 
-const port = 3002;
+const port = 8081;
 app.listen(port, () => console.log(`Trustlayer server listening on port: ${port}!`));

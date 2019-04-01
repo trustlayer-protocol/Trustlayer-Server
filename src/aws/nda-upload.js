@@ -9,6 +9,23 @@ const getUploadParams = (buffer, agreementId) => ({
 });
 
 
+const getDownloadParams = agreementId => ({
+  Bucket: 'trustlayer-agreements',
+  Key: `${agreementId}.pdf`,
+});
+
+
+const getAgreementFromS3 = id => new Promise((resolve, reject) => {
+  s3.getObject(getDownloadParams(id), (err, data) => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve(data);
+    }
+  });
+});
+
+
 const uploadToS3 = (buffer, agreementId) => new Promise((resolve, reject) => {
   const params = getUploadParams(buffer, agreementId);
   s3.putObject(params, (err, data) => {
@@ -21,4 +38,4 @@ const uploadToS3 = (buffer, agreementId) => new Promise((resolve, reject) => {
 });
 
 
-module.exports = { uploadToS3 };
+module.exports = { uploadToS3, getAgreementFromS3 };
