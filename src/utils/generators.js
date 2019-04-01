@@ -122,18 +122,25 @@ const checkAndCreateUser = async (email, profile) => {
   const user = await getUserByEmail(email);
   if (user) return user;
 
-  const { firstName, lastName, avatarUrl } = profile;
+  const {
+    firstName,
+    lastName,
+    avatarUrl,
+    fullName,
+  } = profile;
 
-  let fullName;
-  if (firstName || lastName) {
-    fullName = `${firstName || ''} ${lastName || ''}`.trim();
+  let name;
+  if (fullName) {
+    name = fullName;
+  } else if (firstName || lastName) {
+    name = `${firstName || ''} ${lastName || ''}`.trim();
   }
 
   const link = await generateUniqueLink(TABLES.USERS, 'U');
   const data = {
     email,
     avatarUrl,
-    fullName,
+    fullName: name,
     link,
     created: new Date().getTime(),
   };

@@ -3,6 +3,9 @@ const url = require('url');
 const { validateParams } = require('../utils/validator');
 const { validateUser: validateWithLinkedIn } = require('../requests/linkedin');
 const {
+  validateUser: validateWithGoogle,
+} = require('../requests/google');
+const {
   checkAndCreateUser,
 } = require('../utils/generators');
 const adoption = require('../actions/adoption');
@@ -12,6 +15,9 @@ const getPdf = require('../actions/get-agreement-pdf');
 
 const { InvalidArgumentError } = require('../utils/errors');
 const { ACTION } = require('../utils/enums');
+
+const BASE_REDIRECT = process.env.NODE_ENV === 'production'
+  ? 'https://trustlayer.trustbot.io' : 'http://localhost:3000';
 
 
 const router = express.Router();
@@ -44,7 +50,42 @@ const parseStateParam = (state) => {
 };
 
 
-const processLinkedInRequest = async (code, stateObject) => {
+const getRemoteIpAddress = (req) => {
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  if (ip === '::1') {
+    ip = '127.0.0.1';
+  }
+
+  return ip;
+};
+
+const getStateObject = (req, state) => {
+  const ip = getRemoteIpAddress(req);
+  const stateObject = parseStateParam(state);
+  stateObject.ip = ip;
+
+  return stateObject;
+};
+
+
+const processRequest = (promise, code, stateObject, res, next) => promise(code, stateObject)
+  .then((result) => {
+    const { action } = stateObject;
+    if (action === ACTION.PDF) {
+      res.contentType('application/pdf');
+      return res.end(result.Body, 'binary');
+    }
+    const redirectUrl = url.format({
+      query: result,
+    });
+    return res.redirect(`${BASE_REDIRECT}/sso-success${redirectUrl}`);
+  })
+  .catch((err) => {
+    next(err);
+  });
+
+
+const linkedInRequest = async (code, stateObject) => {
   const validationResult = await validateWithLinkedIn(code);
   const { email, profile } = validationResult;
 
@@ -62,40 +103,41 @@ const processLinkedInRequest = async (code, stateObject) => {
 };
 
 
-const getRemoteIpAddress = (req) => {
-  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  if (ip === '::1') {
-    ip = '127.0.0.1';
-  }
+router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
+  (req, res, next) => {
+    const { code, state, error } = req.query;
+    if (error) {
+      return res.redirect(`${BASE_REDIRECT}/sso-fail?message=${error}`);
+    }
 
-  return ip;
+    const stateObject = getStateObject(req, state);
+    return processRequest(linkedInRequest, code, stateObject, res, next);
+  });
+
+
+const googleRequest = async (code, stateObject) => {
+  const validationResult = await validateWithGoogle(code);
+  const { email, profile } = validationResult;
+  const user = await checkAndCreateUser(email, profile);
+  const { link: userLink } = user;
+
+  const resultAction = await completeAction(user, stateObject);
+  return {
+    ...resultAction,
+    email,
+    profile,
+    userLink,
+  };
 };
 
 
-router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
-  async (req, res, next) => {
-    const { code, state, error } = req.query;
-    if (error) {
-      return res.redirect(`http://localhost:3000/sso-fail?message=${error}`);
-    }
-    const ip = getRemoteIpAddress(req);
-    const stateObject = parseStateParam(state);
-    stateObject.ip = ip;
-    return processLinkedInRequest(code, stateObject)
-      .then((result) => {
-        const { action } = stateObject;
-        if (action === ACTION.PDF) {
-          res.contentType('application/pdf');
-          return res.end(result.Body, 'binary');
-        }
-        const redirectUrl = url.format({
-          query: result,
-        });
-        return res.redirect(`http://localhost:3000/sso-success${redirectUrl}`);
-      })
-      .catch((err) => {
-        next(err);
-      });
+router.get('/google', (req, res, next) => validateParams(req, next, 'code', 'state'),
+  (req, res, next) => {
+    const { code, state } = req.query;
+
+    const stateObject = getStateObject(req, state);
+
+    processRequest(googleRequest, code, stateObject, res, next);
   });
 
 module.exports = router;
