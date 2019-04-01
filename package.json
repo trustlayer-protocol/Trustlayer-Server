@@ -8,7 +8,8 @@
   "license": "GNU General Public License v3.0",
   "private": false,
   "scripts": {
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "deploy": "eb deploy"
   },
   "dependencies": {
     "aws-sdk": "^2.431.0",
