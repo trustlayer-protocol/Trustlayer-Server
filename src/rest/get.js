@@ -11,6 +11,7 @@ const {
 } = require('../db/user');
 const { getByLink: getAgreementByLink } = require('../db/agreement');
 const { ResourceNotFound } = require('../utils/errors');
+const { verifyToken } = require('../security/jwt');
 
 
 const router = express.Router();
@@ -48,13 +49,9 @@ router.get('/default-form', async (req, res, next) => {
 });
 
 
-const getUserData = async (link) => {
-  const user = await getUserByLink(link);
-  if (!user) {
-    throw new ResourceNotFound('User not found');
-  }
+const getUserActionsAndForm = async (user, actionType, limit) => {
   const { id: userId } = user;
-  const actions = await getActionsForUser(userId, null, null);
+  const actions = await getActionsForUser(userId, actionType, limit);
 
   const result = {
     user,
@@ -70,6 +67,28 @@ const getUserData = async (link) => {
   result.recent_form = form;
 
   return result;
+};
+
+
+const getSecureUserData = async (token) => {
+  const tokenData = await verifyToken(token);
+  const { userId } = tokenData;
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new ResourceNotFound('User not found');
+  }
+
+  return getUserActionsAndForm(user, null, null);
+};
+
+
+const getUserData = async (link) => {
+  const user = await getUserByLink(link);
+  if (!user) {
+    throw new ResourceNotFound('User not found');
+  }
+
+  return getUserActionsAndForm(user, 'adopt', 1);
 };
 
 
@@ -100,13 +119,19 @@ const getAgreementData = async (link) => {
 };
 
 
-router.get('/user/:link', async (req, res, next) => {
+router.get('/user/secure/:token', (req, res, next) => {
+  const { token } = req.params;
+  processRequest(getSecureUserData(token), res, next);
+});
+
+
+router.get('/user/:link', (req, res, next) => {
   const { link } = req.params;
   processRequest(getUserData(link), res, next);
 });
 
 
-router.get('/agreement/:link', async (req, res, next) => {
+router.get('/agreement/:link', (req, res, next) => {
   const { link } = req.params;
   processRequest(getAgreementData(link), res, next);
 });

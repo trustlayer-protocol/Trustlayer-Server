@@ -11,6 +11,7 @@ const {
 const adoption = require('../actions/adoption');
 const revocation = require('../actions/revocation');
 const getPdf = require('../actions/get-agreement-pdf');
+const { generateToken } = require('../security/jwt');
 
 
 const { InvalidArgumentError } = require('../utils/errors');
@@ -32,6 +33,9 @@ const completeAction = async (user, stateObject) => {
     actionResult = await revocation(stateObject, user);
   } else if (action === ACTION.PDF) {
     actionResult = await getPdf(link, user.email);
+  } else if (action === ACTION.LOGIN) {
+    const token = generateToken(user.id);
+    actionResult = { token };
   }
 
   return actionResult;
@@ -42,7 +46,7 @@ const parseStateParam = (state) => {
   const stateObject = JSON.parse(state);
   const { action, link, form_id: formId } = stateObject;
 
-  if (!action || (!link && !formId)) {
+  if (!action || (action !== ACTION.LOGIN && (!link && !formId))) {
     throw new InvalidArgumentError('\'state\' param does not have \'action\' or \'link\' or \'form_id\' properties');
   }
 
@@ -78,6 +82,9 @@ const processRequest = (promise, code, stateObject, res, next) => promise(code, 
     const redirectUrl = url.format({
       query: result,
     });
+    if (action === ACTION.LOGIN) {
+      return res.redirect(`${BASE_REDIRECT}/home${redirectUrl}`);
+    }
     return res.redirect(`${BASE_REDIRECT}/sso-success${redirectUrl}`);
   })
   .catch((err) => {

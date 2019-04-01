@@ -4,7 +4,7 @@ const pool = require('./index');
 const getActionsForUser = async (userId, type = null, limit = null) => {
   let queryText = `SELECT * from actions where user_id = ${userId}`;
   if (type) {
-    queryText += ` and type = '${type}'`;
+    queryText += ` and action = '${type}'`;
   }
   queryText += ' order by created desc';
   if (limit) {
