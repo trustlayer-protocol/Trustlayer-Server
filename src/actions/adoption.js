@@ -70,7 +70,10 @@ const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => 
     newAdoption, linkUserEmail, userEmail);
   sendAgreementEmails(linkUserEmail, userEmail, agreementLink, buffer);
 
-  return newAdoption;
+  return {
+    adoption: newAdoption,
+    agreement,
+  };
 };
 
 

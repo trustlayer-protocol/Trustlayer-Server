@@ -25,18 +25,19 @@ const router = express.Router();
 
 
 const completeAction = async (user, stateObject) => {
-  let actionResult;
+  let actionResult = {};
   const { action, link } = stateObject;
   if (action === ACTION.ADOPT) {
-    actionResult = await adoption(stateObject, user);
+    const { agreement } = await adoption(stateObject, user);
+    actionResult = agreement;
   } else if (action === ACTION.REVOKE) {
     actionResult = await revocation(stateObject, user);
   } else if (action === ACTION.PDF) {
     actionResult = await getPdf(link, user.email);
-  } else if (action === ACTION.LOGIN) {
-    const token = generateToken(user.id);
-    actionResult = { token };
   }
+
+  const token = generateToken(user.id);
+  actionResult.token = token;
 
   return actionResult;
 };
@@ -74,7 +75,7 @@ const getStateObject = (req, state) => {
 
 const processRequest = (promise, code, stateObject, res, next) => promise(code, stateObject)
   .then((result) => {
-    const { action } = stateObject;
+    const { action, link } = stateObject;
     if (action === ACTION.PDF) {
       res.contentType('application/pdf');
       return res.end(result.Body, 'binary');
@@ -82,10 +83,10 @@ const processRequest = (promise, code, stateObject, res, next) => promise(code, 
     const redirectUrl = url.format({
       query: result,
     });
-    if (action === ACTION.LOGIN) {
-      return res.redirect(`${BASE_REDIRECT}/home${redirectUrl}`);
+    if (action === ACTION.ADOPT && link) {
+      return res.redirect(`${BASE_REDIRECT}/sso-success${redirectUrl}`);
     }
-    return res.redirect(`${BASE_REDIRECT}/sso-success${redirectUrl}`);
+    return res.redirect(`${BASE_REDIRECT}/home${redirectUrl}`);
   })
   .catch((err) => {
     next(err);
@@ -98,14 +99,11 @@ const linkedInRequest = async (code, stateObject) => {
 
 
   const user = await checkAndCreateUser(email, profile);
-  const { link: userLink } = user;
 
   const resultAction = await completeAction(user, stateObject);
   return {
     ...resultAction,
     email,
-    profile,
-    userLink,
   };
 };
 
@@ -126,14 +124,11 @@ const googleRequest = async (code, stateObject) => {
   const validationResult = await validateWithGoogle(code);
   const { email, profile } = validationResult;
   const user = await checkAndCreateUser(email, profile);
-  const { link: userLink } = user;
 
   const resultAction = await completeAction(user, stateObject);
   return {
     ...resultAction,
     email,
-    profile,
-    userLink,
   };
 };
 
