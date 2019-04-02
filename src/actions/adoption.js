@@ -87,8 +87,7 @@ const completeAdoption = async (stateObject, user) => {
   if (link) {
     resultAction = await completeAdoptionFromLink(userId, userEmail, link, ip);
   }
-  const { link: newAdoptionLink } = resultAction;
-  sendAdoptionEmail(userEmail, newAdoptionLink, userLink);
+  sendAdoptionEmail(userEmail, userLink);
 
 
   return resultAction;

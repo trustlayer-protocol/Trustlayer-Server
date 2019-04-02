@@ -14,7 +14,7 @@ const {
 
 const completeRevocation = async (state, user) => {
   const { link: adoptionLink, ip } = state;
-  const { id: userId, email: userEmail, link: userLink } = user;
+  const { id: userId, email: userEmail } = user;
 
   const adoption = await getActionByLink(adoptionLink);
 
@@ -25,7 +25,7 @@ const completeRevocation = async (state, user) => {
 
   const result = await createRevocationByFormId(userId, formId, ip);
 
-  sendRevocationEmail(userEmail, userLink);
+  sendRevocationEmail(userEmail);
 
   return result;
 };

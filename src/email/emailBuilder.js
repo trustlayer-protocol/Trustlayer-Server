@@ -3,6 +3,7 @@ const path = require('path');
 
 
 const NODE_BASE_URL = 'trustlayer.trustbot.io/';
+const HOME_URL = 'home';
 const ADOPTION_COMPLETE_TITLE = 'Adoption confirmed on Trustlayer';
 const REVOCATION_COMPLETE_TITLE = 'Revocation confirmation';
 const getAgreementCompleteTitle = otherEmail => `Your agreement with ${otherEmail} is effective`;
@@ -15,11 +16,11 @@ const readTemplate = (fileName) => {
 };
 
 
-const buildRevocationEmail = (userLink) => {
+const buildRevocationEmail = () => {
   const title = REVOCATION_COMPLETE_TITLE;
   let body = readTemplate('revocation.html');
 
-  body = body.replace(/USER_LINK/g, `${NODE_BASE_URL}${userLink}`);
+  body = body.replace(/USER_LINK/g, `${NODE_BASE_URL}${HOME_URL}`);
 
   return {
     body,
@@ -42,11 +43,11 @@ const buildAgreementEmail = (otherEmail, link) => {
 };
 
 
-const buildAdoptionEmail = (adoptionLink, userLink) => {
+const buildAdoptionEmail = (userLink) => {
   const title = ADOPTION_COMPLETE_TITLE;
   let body = readTemplate('adoption.html');
 
-  body = body.replace(/ADOPTION_LINK/g, `${NODE_BASE_URL}${adoptionLink}`);
+  body = body.replace(/ADOPTION_LINK/g, `${NODE_BASE_URL}${HOME_URL}`);
   body = body.replace(/USER_LINK/g, `${NODE_BASE_URL}${userLink}`);
 
   return {

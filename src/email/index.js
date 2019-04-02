@@ -38,16 +38,16 @@ const sendAgreementEmails = async (user1Email, user2Email, agreementLink, buffer
 };
 
 
-const sendAdoptionEmail = async (to, adoptionLink, userLink) => {
-  const emailContent = buildAdoptionEmail(adoptionLink, userLink);
+const sendAdoptionEmail = async (to, userLink) => {
+  const emailContent = buildAdoptionEmail(userLink);
   const { title, body } = emailContent;
 
   return requestMailgun(to, title, body);
 };
 
 
-const sendRevocationEmail = async (to, userLink) => {
-  const emailContent = buildRevocationEmail(userLink);
+const sendRevocationEmail = async (to) => {
+  const emailContent = buildRevocationEmail();
   const { title, body } = emailContent;
 
   return requestMailgun(to, title, body);
