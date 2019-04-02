@@ -32,17 +32,21 @@ const addLogDataToBody = (agreementBody, linkAdoption, adoption, linkUserEmail, 
   <div>
     <h2>Adoption logs</h2>
     <div>
-      <p>${linkUserEmail}</p>
-      <p>Adopted: ${linkDate}</p>
-      <p>Public IP address: ${linkIp}</p>
-      <p>Form hash: ${linkHash}</p>
+      <p>
+        ${linkUserEmail}<br/>
+        Adopted: ${linkDate}<br/>
+        Public IP address: ${linkIp}<br/>
+        Form hash: ${linkHash}<br/>
+      </p>
     </div>
     <br/>
     <div>
-      <p>${userEmail}</p>
-      <p>Adopted: ${date}</p>
-      <p>Public IP address: ${ip}</p>
-      <p>Form hash: ${hash}</p>
+      <p>
+        ${userEmail}<br/>
+        Adopted: ${date}<br/>
+        Public IP address: ${ip}<br/>
+        Form hash: ${hash}<br/>
+      </p>
     </div>
   </div>
   `;

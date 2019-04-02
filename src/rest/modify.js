@@ -63,6 +63,9 @@ const getRemoteIpAddress = (req) => {
   if (ip === '::1') {
     ip = '127.0.0.1';
   }
+  if (ip.indexOf(',') !== -1) {
+    ip = ip.split(',')[0].trim();
+  }
 
   return ip;
 };
