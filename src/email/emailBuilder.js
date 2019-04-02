@@ -3,7 +3,7 @@ const path = require('path');
 
 
 const NODE_BASE_URL = 'trustlayer.trustbot.io/';
-const HOME_URL = 'home';
+const HOME_URL = 'login';
 const ADOPTION_COMPLETE_TITLE = 'Adoption confirmed on Trustlayer';
 const REVOCATION_COMPLETE_TITLE = 'Revocation confirmation';
 const getAgreementCompleteTitle = otherEmail => `Your agreement with ${otherEmail} is effective`;

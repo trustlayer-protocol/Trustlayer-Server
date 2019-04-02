@@ -2,8 +2,10 @@ const pool = require('./index');
 
 
 const getAvatarsOfFormAdopters = async (formId) => {
-  const queryText = `select DISTINCT usr.id, usr.avatar_url from users usr, actions action 
-  where action.form_id = ${formId} and action.user_id = usr.id and action.action = 'adopt' ORDER BY usr.id`;
+  const latestUserActionQueryText = 'select action2.action from actions action2 where action2.user_id = usr.id ORDER BY created DESC LIMIT 1';
+  const queryText = `select DISTINCT usr.id, usr.avatar_url, usr.full_name from users usr, actions action
+  where action.form_id = ${formId} and action.user_id = usr.id and action.action = 'adopt'
+and (${latestUserActionQueryText}) != 'revoke' ORDER BY usr.id`;
 
   const result = await pool().query(queryText);
 

@@ -93,7 +93,7 @@ const getUserData = async (link) => {
     throw new ResourceNotFound('User not found');
   }
 
-  return getUserActionsAndForm(user, 'adopt', 1);
+  return getUserActionsAndForm(user, null, 1);
 };
 
 
