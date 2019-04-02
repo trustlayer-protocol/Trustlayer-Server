@@ -28,8 +28,11 @@ const completeAction = async (user, stateObject) => {
   let actionResult = {};
   const { action, link } = stateObject;
   if (action === ACTION.ADOPT) {
-    const { agreement } = await adoption(stateObject, user);
-    actionResult = agreement;
+    actionResult = await adoption(stateObject, user);
+    if (link) {
+      const { agreement } = actionResult;
+      actionResult = agreement;
+    }
   } else if (action === ACTION.REVOKE) {
     actionResult = await revocation(stateObject, user);
   } else if (action === ACTION.PDF) {
