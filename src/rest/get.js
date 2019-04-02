@@ -4,10 +4,10 @@ const {
   getFormById,
   getAvatarsOfFormAdopters,
 } = require('../db/form');
-const { 
+const {
   getActionsForUser,
   getActionById,
-  } = require('../db/action');
+} = require('../db/action');
 const {
   getByLink: getUserByLink,
   getById: getUserById,
@@ -67,7 +67,9 @@ const getUserActionsAndForm = async (user, actionType, limit) => {
 
   const { form_id: formId } = actions[0];
   const form = await getFormById(formId);
+  const avatars = await getAvatarsOfFormAdopters(formId);
   result.recent_form = form;
+  result.avatars = avatars;
 
   return result;
 };
