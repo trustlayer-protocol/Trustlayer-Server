@@ -17,6 +17,13 @@ const getActionsForUser = async (userId, type = null, limit = null) => {
 };
 
 
+const getActionById = async (id) => {
+  const result = await pool().query('SELECT * from actions where id = $1', [id]);
+
+  return result.rows[0];
+};
+
+
 const getActionByLink = async (link) => {
   const result = await pool().query('SELECT * from actions where link = $1', [link]);
 
@@ -45,4 +52,5 @@ module.exports = {
   createNewAction,
   getActionByLink,
   getActionsForUser,
+  getActionById,
 };

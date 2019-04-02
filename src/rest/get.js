@@ -4,7 +4,10 @@ const {
   getFormById,
   getAvatarsOfFormAdopters,
 } = require('../db/form');
-const { getActionsForUser } = require('../db/action');
+const { 
+  getActionsForUser,
+  getActionById,
+  } = require('../db/action');
 const {
   getByLink: getUserByLink,
   getById: getUserById,
@@ -101,17 +104,23 @@ const getAgreementData = async (link) => {
     form_id: formId,
     user_1_id: user1Id,
     user_2_id: user2Id,
+    adoption_1_id: adoption1Id,
+    adoption_2_id: adoption2Id,
   } = agreement;
 
   const form = await getFormById(formId);
   const user1 = await getUserById(user1Id);
   const user2 = await getUserById(user2Id);
+  const adoption1 = await getActionById(adoption1Id);
+  const adoption2 = await getActionById(adoption2Id);
   const avatars = await getAvatarsOfFormAdopters(formId);
   const result = {
     agreement,
     form,
     user1,
     user2,
+    adoption1,
+    adoption2,
     avatars,
   };
 

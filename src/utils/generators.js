@@ -79,7 +79,7 @@ const createRevocationByFormId = async (userId, formId, ip) => {
 };
 
 
-const createAgreement = async (user1Id, user2Id, formId, formHash) => {
+const createAgreement = async (user1Id, user2Id, formId, formHash, adoption1Id, adoption2Id) => {
   const link = await generateUniqueLink(TABLES.AGREEMENTS, 'A');
 
   const agreement = {
@@ -88,6 +88,8 @@ const createAgreement = async (user1Id, user2Id, formId, formHash) => {
     formId,
     formHash,
     link,
+    adoption1Id,
+    adoption2Id,
     created: new Date().getTime(),
   };
 
@@ -101,13 +103,22 @@ const createAdoptionAndAgreementFromLink = async (userId, link, ip) => {
   if (linkAdoption.user_id === userId) throw new InvalidArgumentError('Cannot adopt with your own link');
 
   const {
+    id: linkAdoptionId,
     form_id: formId,
     user_id: adoptionUserId,
     form_hash: formHash,
   } = linkAdoption;
 
   const newAdoption = await createAdoptionByFormId(userId, formId, ip);
-  const newAgreement = await createAgreement(adoptionUserId, userId, formId, formHash);
+  const { id: newAdptionId } = newAdoption;
+  const newAgreement = await createAgreement(
+    adoptionUserId,
+    userId,
+    formId,
+    formHash,
+    linkAdoptionId,
+    newAdptionId,
+  );
 
 
   return {

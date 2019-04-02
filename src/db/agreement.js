@@ -22,10 +22,12 @@ const insertAgreement = async ({
   formId,
   formHash,
   created,
+  adoption1Id,
+  adoption2Id,
   link,
 }) => {
-  const values = [user1Id, user2Id, formId, formHash, created, link];
-  const queryText = 'INSERT INTO agreements(user_1_id, user_2_id, form_id, form_hash, created, link) VALUES($1, $2, $3, $4, $5, $6) RETURNING *';
+  const values = [user1Id, user2Id, formId, formHash, adoption1Id, adoption2Id, created, link];
+  const queryText = 'INSERT INTO agreements(user_1_id, user_2_id, form_id, form_hash, adoption_1_id, adoption_2_id, created, link) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
   const result = await pool().query(queryText, values);
 
   return result.rows[0];
