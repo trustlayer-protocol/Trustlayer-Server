@@ -11,20 +11,22 @@ const {
 } = require('../db/form');
 const {
   createNewAction,
-  getActionByLink,
 } = require('../db/action');
 const {
   insertAgreement,
 } = require('../db/agreement');
 const pool = require('../db/');
 const {
-  InvalidArgumentError,
   ResourceNotFound,
+  InvalidArgumentError,
 } = require('../utils/errors');
 const {
   ACTION,
   TABLES,
 } = require('../utils/enums');
+const {
+  checkTransactions,
+} = require('../blockchain/transactions');
 
 
 const generateUniqueLink = async (table, prepend) => {
@@ -42,7 +44,7 @@ const generateUniqueLink = async (table, prepend) => {
 };
 
 
-const createAction = async (userId, action, formId, ip) => {
+const createAction = async (userId, action, formId, ip, transactionHash) => {
   const form = await getFormById(formId);
 
   if (!form) throw new ResourceNotFound(`form with id: ${formId} not found`);
@@ -56,6 +58,7 @@ const createAction = async (userId, action, formId, ip) => {
     formId,
     link,
     ip,
+    transactionHash,
     created: new Date().getTime(),
   };
 
@@ -65,15 +68,15 @@ const createAction = async (userId, action, formId, ip) => {
 };
 
 
-const createAdoptionByFormId = async (userId, formId, ip) => {
-  const adoption = await createAction(userId, ACTION.ADOPT, formId, ip);
+const createAdoptionByFormId = async (userId, formId, ip, transactionHash) => {
+  const adoption = await createAction(userId, ACTION.ADOPT, formId, ip, transactionHash);
 
   return adoption;
 };
 
 
-const createRevocationByFormId = async (userId, formId, ip) => {
-  const revocation = await createAction(userId, ACTION.REVOKE, formId, ip);
+const createRevocationByFormId = async (userId, formId, ip, transactionHash) => {
+  const revocation = await createAction(userId, ACTION.REVOKE, formId, ip, transactionHash);
 
   return revocation;
 };
@@ -97,20 +100,23 @@ const createAgreement = async (user1Id, user2Id, formId, formHash, adoption1Id, 
 };
 
 
-const createAdoptionAndAgreementFromLink = async (userId, link, ip) => {
-  const linkAdoption = await getActionByLink(link);
-  if (!linkAdoption) throw new ResourceNotFound(`adoption with link: '${link}' not found`);
-  if (linkAdoption.user_id === userId) throw new InvalidArgumentError('Cannot adopt with your own link');
-
+const createAdoptionAndAgreementFromLink = async (userId, linkAdoption, ip, transactionHash) => {
   const {
     id: linkAdoptionId,
     form_id: formId,
     user_id: adoptionUserId,
     form_hash: formHash,
+    bc_transaction_hash: linkAdoptionTxHash,
   } = linkAdoption;
 
-  const newAdoption = await createAdoptionByFormId(userId, formId, ip);
-  const { id: newAdptionId } = newAdoption;
+  const newAdoption = await createAdoptionByFormId(userId, formId, ip, transactionHash);
+  const {
+    id: newAdptionId,
+    bc_transaction_hash: newAdoptionTxHash,
+  } = newAdoption;
+
+  const validTransactions = await checkTransactions(linkAdoptionTxHash, newAdoptionTxHash);
+  if (!validTransactions) throw new InvalidArgumentError('Transactions hashes for the adoptions do not belong to the same UNDA. Users are not adopting the same form');
   const newAgreement = await createAgreement(
     adoptionUserId,
     userId,
