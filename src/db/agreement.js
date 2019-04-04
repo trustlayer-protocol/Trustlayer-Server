@@ -33,8 +33,40 @@ const insertAgreement = async ({
   return result.rows[0];
 };
 
+const getByUserId = async (userId) => {
+  const queryText = `
+    SELECT *, agreements.link as agreement_link
+    FROM agreements
+    JOIN forms ON agreements.form_id = forms.id
+    JOIN users
+      ON (
+        (agreements.user_1_id = users.id AND agreements.user_1_id != ${userId}) OR
+        (agreements.user_2_id = users.id AND agreements.user_2_id != ${userId})
+      )
+    WHERE user_1_id = ${userId} OR user_2_id = ${userId};
+  `;
+  const result = await pool().query(queryText);
+
+  const formattedRow = result.rows.map(row => ({
+    agreement: {
+      content: row.content,
+      created: row.created,
+      link: row.agreement_link,
+      hash: row.form_hash
+    },
+    otherSigner: {
+      avatarUrl: row.avatar_url,
+      name: row.full_name,
+      email: row.email
+    }
+  }));
+
+  return formattedRow;
+}
+
 module.exports = {
   insertAgreement,
   getByLink,
-  getUserEmailsForAgreement,
+  getByUserId,
+  getUserEmailsForAgreement
 };
