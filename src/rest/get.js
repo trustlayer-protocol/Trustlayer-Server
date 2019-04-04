@@ -12,7 +12,10 @@ const {
   getByLink: getUserByLink,
   getById: getUserById,
 } = require('../db/user');
-const { getByLink: getAgreementByLink } = require('../db/agreement');
+const {
+  getByLink: getAgreementByLink,
+  getByUserId: getAgreementsByUserId
+} = require('../db/agreement');
 const { ResourceNotFound } = require('../utils/errors');
 const { verifyToken } = require('../security/jwt');
 
@@ -130,6 +133,13 @@ const getAgreementData = async (link) => {
 };
 
 
+const getAgreementsData = async (userId) => {
+  const agreements = await getAgreementsByUserId(userId);
+
+  return agreements
+}
+
+
 router.get('/user/secure/:token', (req, res, next) => {
   const { token } = req.params;
   processRequest(getSecureUserData(token), res, next);
@@ -147,5 +157,10 @@ router.get('/agreement/:link', (req, res, next) => {
   processRequest(getAgreementData(link), res, next);
 });
 
+
+router.get('/agreements/:userId', (req, res, next) => {
+  const { userId } = req.params;
+  processRequest(getAgreementsData(userId), res, next);
+});
 
 module.exports = router;
