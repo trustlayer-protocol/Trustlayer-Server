@@ -8,6 +8,9 @@ const {
   sendAgreementEmails,
 } = require('../email');
 const {
+  getActionByLink,
+} = require('../db/action');
+const {
   getById: getUserbyId,
 } = require('../db/user');
 const {
@@ -17,6 +20,13 @@ const convertToPdf = require('../pdf/html-pdf');
 const {
   uploadToS3,
 } = require('../aws/nda-upload');
+const {
+  pushAdoption,
+} = require('../blockchain/transactions');
+const {
+  InvalidArgumentError,
+  ResourceNotFound,
+} = require('../utils/errors');
 
 
 const markedPromise = formMarkup => new Promise((resolve, reject) => {
@@ -49,12 +59,11 @@ const uploadAgreementPDF = async (
 };
 
 
-const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => {
+const completeAdoptionFromLink = async (userId, userEmail, linkAdoption, ip, transactionHash) => {
   const {
-    linkAdoption,
     newAdoption,
     agreement,
-  } = await createAdoptionAndAgreementFromLink(userId, adoptionLink, ip);
+  } = await createAdoptionAndAgreementFromLink(userId, linkAdoption, ip, transactionHash);
   const {
     id: agreementId,
     link: agreementLink,
@@ -77,15 +86,27 @@ const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => 
 };
 
 
+const adoptionFromLink = async (link, userId, userEmail, ip) => {
+  const linkAdoption = await getActionByLink(link);
+  const { user_id: linkUserId } = linkAdoption;
+  if (linkUserId === userId) throw new InvalidArgumentError('Cannot adopt from your own link');
+  if (!linkAdoption) throw new ResourceNotFound(`adoption with link: '${link}' not found`);
+
+  const transactionHash = await pushAdoption();
+  return completeAdoptionFromLink(userId, userEmail, linkAdoption, ip, transactionHash);
+};
+
+
 const completeAdoption = async (stateObject, user) => {
   let resultAction;
   const { link, form_id: formId, ip } = stateObject;
   const { id: userId, email: userEmail, link: userLink } = user;
   if (!link && formId) {
-    resultAction = await createAdoptionByFormId(userId, formId, ip);
+    const transactionHash = await pushAdoption();
+    resultAction = await createAdoptionByFormId(userId, formId, ip, transactionHash);
   }
   if (link) {
-    resultAction = await completeAdoptionFromLink(userId, userEmail, link, ip);
+    resultAction = await adoptionFromLink(link, userId, userEmail);
   }
   sendAdoptionEmail(userEmail, userLink);
 

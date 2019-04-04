@@ -10,6 +10,7 @@ const {
 const {
   sendRevocationEmail,
 } = require('../email');
+const { pushRevocation } = require('../blockchain/transactions');
 
 
 const completeRevocation = async (state, user) => {
@@ -23,7 +24,9 @@ const completeRevocation = async (state, user) => {
     throw new InvalidArgumentError('Adoption does not belong to user.');
   }
 
-  const result = await createRevocationByFormId(userId, formId, ip);
+  const transactionHash = await pushRevocation(adoptionLink);
+
+  const result = await createRevocationByFormId(userId, formId, ip, transactionHash);
 
   sendRevocationEmail(userEmail);
 
