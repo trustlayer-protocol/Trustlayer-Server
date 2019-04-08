@@ -26,6 +26,7 @@ test('db/insertAgreement inserts agreement', async () => {
   };
 
   const newAgreement = await insertAgreement(agreement);
+  await deleteAgreement(newAgreement.link);
 
   expect(newAgreement).not.toBeNull();
   expect(newAgreement).not.toBeUndefined();
@@ -37,8 +38,6 @@ test('db/insertAgreement inserts agreement', async () => {
   expect(newAgreement).toHaveProperty('adoption_1_id', expect.anything());
   expect(newAgreement).toHaveProperty('adoption_2_id', expect.anything());
   expect(newAgreement).toHaveProperty('link', expect.anything());
-
-  await deleteAgreement(newAgreement.link);
 });
 
 
@@ -47,21 +46,21 @@ test('db/getByUserId returns agreements', async () => {
 
   expect(agreements).not.toBeNull();
   expect(agreements).not.toBeUndefined();
-  expect(agreements.length).toEqual(1);
+  expect(agreements.length).toBeGreaterThanOrEqual(1);
 });
 
 
 test('db/getByLink returns agreement', async () => {
-  const agreement = await getByLink('AAzqc7fW6tL');
+  const agreement = await getByLink('AOWqNouNdX2');
 
   expect(agreement).not.toBeNull();
   expect(agreement).not.toBeUndefined();
-  expect(agreement.id).toEqual(106);
+  expect(agreement.id).toEqual(178);
 });
 
 
 test('db/getUserEmailsForAgreement returns emails', async () => {
-  const userEmails = await getUserEmailsForAgreement('AAzqc7fW6tL');
+  const userEmails = await getUserEmailsForAgreement('AOWqNouNdX2');
   expect(userEmails).not.toBeNull();
   expect(userEmails).not.toBeUndefined();
   const { email1, email2 } = userEmails;

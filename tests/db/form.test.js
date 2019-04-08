@@ -18,13 +18,12 @@ beforeAll(async () => {
 
 test('inserForm inserts form', async () => {
   const newForm = await inserForm('test hash', 'test content');
+  await deleteForm(newForm.id);
 
   expect(newForm).toEqual(expect.anything());
   expect(newForm).toHaveProperty('hash', expect.anything());
   expect(newForm).toHaveProperty('content', expect.anything());
   expect(newForm).toHaveProperty('id', expect.anything());
-
-  await deleteForm(newForm.id);
 });
 
 
