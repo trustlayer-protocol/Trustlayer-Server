@@ -89,8 +89,8 @@ const completeAdoptionFromLink = async (userId, userEmail, linkAdoption, ip, tra
 const adoptionFromLink = async (link, userId, userEmail, ip) => {
   const linkAdoption = await getActionByLink(link);
   const { user_id: linkUserId } = linkAdoption;
-  if (linkUserId === userId) throw new InvalidArgumentError('Cannot adopt from your own link');
-  if (!linkAdoption) throw new ResourceNotFound(`adoption with link: '${link}' not found`);
+  if (linkUserId === userId) throw new InvalidArgumentError('Looks like you tried to adopt from your own link, unfortunately you can\'t do that.');
+  if (!linkAdoption) throw new ResourceNotFound(`Could not find adoption for link: '${link}'.`);
 
   const transactionHash = await pushAdoption();
   return completeAdoptionFromLink(userId, userEmail, linkAdoption, ip, transactionHash);

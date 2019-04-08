@@ -15,11 +15,11 @@ const validateToken = async (accessToken) => {
   const url = `${TOKEN_VERIFY_URL}${accessToken}`;
   const result = await axios.get(url);
   if (!result.status === 200) {
-    throw new AuthenticationError('Error validating access token');
+    throw new AuthenticationError('Whoops! Looks like there was an error validating your Google account. Please try again.');
   }
   const { aud } = result.data;
   if (aud !== CLIENT_ID) {
-    throw new AuthenticationError('Invalid access token');
+    throw new AuthenticationError('Whoops! Looks like there was an error validating your Google account. Please try again.');
   }
 };
 

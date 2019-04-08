@@ -14,7 +14,7 @@ const {
 } = require('../db/user');
 const {
   getByLink: getAgreementByLink,
-  getByUserId: getAgreementsByUserId
+  getByUserId: getAgreementsByUserId,
 } = require('../db/agreement');
 const { ResourceNotFound } = require('../utils/errors');
 const { verifyToken } = require('../security/jwt');
@@ -37,7 +37,7 @@ const processRequest = (promise, res, next) => {
 const getDefaultForm = async () => {
   const forms = await getAllForms();
   if (!forms || forms.length <= 0) {
-    throw new ResourceNotFound('No forms found');
+    throw new ResourceNotFound('No adoption forms found.');
   }
 
   const form = forms[0];
@@ -83,7 +83,7 @@ const getSecureUserData = async (token) => {
   const { userId } = tokenData;
   const user = await getUserById(userId);
   if (!user) {
-    throw new ResourceNotFound('User not found');
+    throw new ResourceNotFound('User not found.');
   }
 
   return getUserActionsAndForm(user, null, null);
@@ -93,7 +93,7 @@ const getSecureUserData = async (token) => {
 const getUserData = async (link) => {
   const user = await getUserByLink(link);
   if (!user) {
-    throw new ResourceNotFound('User not found');
+    throw new ResourceNotFound('User not found.');
   }
 
   return getUserActionsAndForm(user, null, 1);
@@ -136,8 +136,8 @@ const getAgreementData = async (link) => {
 const getAgreementsData = async (userId) => {
   const agreements = await getAgreementsByUserId(userId);
 
-  return agreements
-}
+  return agreements;
+};
 
 
 router.get('/user/secure/:token', (req, res, next) => {

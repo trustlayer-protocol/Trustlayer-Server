@@ -116,7 +116,7 @@ const createAdoptionAndAgreementFromLink = async (userId, linkAdoption, ip, tran
   } = newAdoption;
 
   const validTransactions = await checkTransactions(linkAdoptionTxHash, newAdoptionTxHash);
-  if (!validTransactions) throw new InvalidArgumentError('Transactions hashes for the adoptions do not belong to the same UNDA. Users are not adopting the same form');
+  if (!validTransactions) throw new InvalidArgumentError('Looks like the form you\'re trying to adopt is not the same form that the other user adopted. Please try again or contact support@trustbot.io for help.');
   const newAgreement = await createAgreement(
     adoptionUserId,
     userId,

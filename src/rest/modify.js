@@ -95,7 +95,8 @@ const processRequest = (promise, code, stateObject, res, next) => promise(code, 
     return res.redirect(`${BASE_REDIRECT}/home${redirectUrl}`);
   })
   .catch((err) => {
-    next(err);
+    const { message } = err;
+    return res.redirect(`${BASE_REDIRECT}/fail?message=${message}`);
   });
 
 
