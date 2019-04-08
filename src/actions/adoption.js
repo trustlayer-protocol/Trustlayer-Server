@@ -44,22 +44,23 @@ const uploadAgreementPDF = async (
   agreementId,
   linkAdoption,
   adoption,
-  linkUserEmail,
-  userEmail,
+  linkUser,
+  user,
 ) => {
   const { form_id: formId } = adoption;
 
   const form = await getFormById(formId);
   const { content: formMarkup } = form;
-  const html = await markedPromise(formMarkup, linkAdoption, adoption, linkUserEmail, userEmail);
-  const buffer = await convertToPdf(html, linkAdoption, adoption, linkUserEmail, userEmail);
+  const html = await markedPromise(formMarkup);
+  const buffer = await convertToPdf(html, linkAdoption, adoption, linkUser, user);
   uploadToS3(buffer, agreementId);
 
   return buffer;
 };
 
 
-const completeAdoptionFromLink = async (userId, userEmail, linkAdoption, ip, transactionHash) => {
+const completeAdoptionFromLink = async (user, linkAdoption, ip, transactionHash) => {
+  const { id: userId, email: userEmail } = user;
   const {
     newAdoption,
     agreement,
@@ -76,7 +77,7 @@ const completeAdoptionFromLink = async (userId, userEmail, linkAdoption, ip, tra
   const { email: linkUserEmail } = linkUser;
 
   const buffer = await uploadAgreementPDF(agreementId, linkAdoption,
-    newAdoption, linkUserEmail, userEmail);
+    newAdoption, linkUser, user);
   sendAgreementEmails(linkUserEmail, userEmail, agreementLink, buffer);
 
   return {
@@ -86,14 +87,15 @@ const completeAdoptionFromLink = async (userId, userEmail, linkAdoption, ip, tra
 };
 
 
-const adoptionFromLink = async (link, userId, userEmail, ip) => {
+const adoptionFromLink = async (link, user, ip) => {
   const linkAdoption = await getActionByLink(link);
   const { user_id: linkUserId } = linkAdoption;
+  const { id: userId } = user;
   if (linkUserId === userId) throw new InvalidArgumentError('Looks like you tried to adopt from your own link, unfortunately you can\'t do that.');
   if (!linkAdoption) throw new ResourceNotFound(`Could not find adoption for link: '${link}'.`);
 
   const transactionHash = await pushAdoption();
-  return completeAdoptionFromLink(userId, userEmail, linkAdoption, ip, transactionHash);
+  return completeAdoptionFromLink(user, linkAdoption, ip, transactionHash);
 };
 
 
@@ -106,7 +108,7 @@ const completeAdoption = async (stateObject, user) => {
     resultAction = await createAdoptionByFormId(userId, formId, ip, transactionHash);
   }
   if (link) {
-    resultAction = await adoptionFromLink(link, userId, userEmail);
+    resultAction = await adoptionFromLink(link, user, ip);
   }
   sendAdoptionEmail(userEmail, userLink);
 

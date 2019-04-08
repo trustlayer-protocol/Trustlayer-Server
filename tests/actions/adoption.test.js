@@ -21,10 +21,11 @@ beforeAll(async () => {
 
 test('adoption with link completes', async () => {
   const user = await getById(29);
+  const ip = '127.0.000.000';
   const stateObject = {
     link: 'D9L7jejeGdf',
     form_id: 2,
-    ip: '127.0.000.000',
+    ip,
   };
 
   const result = await adopt(stateObject, user);
@@ -36,6 +37,7 @@ test('adoption with link completes', async () => {
   expect(agreement).toEqual(expect.anything());
   expect(adoption).toHaveProperty('link', expect.anything());
   expect(adoption).toHaveProperty('bc_transaction_hash', expect.anything());
+  expect(adoption).toHaveProperty('ip', ip);
   expect(agreement).toHaveProperty('link', expect.anything());
   expect(agreement).toHaveProperty('user_1_id', 6);
   expect(agreement).toHaveProperty('user_2_id', 29);
