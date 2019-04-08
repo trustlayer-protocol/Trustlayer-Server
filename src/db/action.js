@@ -31,6 +31,12 @@ const getActionByLink = async (link) => {
 };
 
 
+const removeAction = async (link) => {
+  const queryText = 'DELETE from actions where link = $1';
+  await pool().query(queryText, [link]);
+};
+
+
 const createNewAction = async ({
   formId,
   formHash,
@@ -54,4 +60,5 @@ module.exports = {
   getActionByLink,
   getActionsForUser,
   getActionById,
+  removeAction,
 };

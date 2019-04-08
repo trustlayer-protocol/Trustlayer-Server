@@ -43,10 +43,17 @@ const inserForm = async (hash, content) => {
 };
 
 
+const deleteForm = async (formId) => {
+  const queryText = 'DELETE from forms where id = $1';
+  await pool().query(queryText, [formId]);
+};
+
+
 module.exports = {
   inserForm,
   getFormByHash,
   getFormById,
   getAllForms,
   getAvatarsOfFormAdopters,
+  deleteForm,
 };

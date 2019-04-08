@@ -16,6 +16,13 @@ const getByLink = async (link) => {
   return result.rows[0];
 };
 
+
+const deleteAgreement = async (link) => {
+  const queryText = 'DELETE from agreements where link = $1';
+  await pool().query(queryText, [link]);
+};
+
+
 const insertAgreement = async ({
   user1Id,
   user2Id,
@@ -52,21 +59,22 @@ const getByUserId = async (userId) => {
       content: row.content,
       created: row.created,
       link: row.agreement_link,
-      hash: row.form_hash
+      hash: row.form_hash,
     },
     otherSigner: {
       avatarUrl: row.avatar_url,
       name: row.full_name,
-      email: row.email
-    }
+      email: row.email,
+    },
   }));
 
   return formattedRow;
-}
+};
 
 module.exports = {
   insertAgreement,
   getByLink,
   getByUserId,
-  getUserEmailsForAgreement
+  getUserEmailsForAgreement,
+  deleteAgreement,
 };

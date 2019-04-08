@@ -37,9 +37,16 @@ const insertUser = async ({
 };
 
 
+const deleteUser = async (id) => {
+  const queryText = 'DELETE from users where id = $1';
+  await pool().query(queryText, [id]);
+};
+
+
 module.exports = {
   insertUser,
   getUserByEmail,
   getByLink,
   getById,
+  deleteUser,
 };
