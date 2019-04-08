@@ -10,7 +10,8 @@
   "scripts": {
     "test": "jest",
     "start": "node src/app.js",
-    "deploy": "eb deploy"
+    "deploy": "eb deploy",
+    "truffle_migrate": "./node_modules/.bin/truffle migrate --network rinkeby"
   },
   "dependencies": {
     "aws-sdk": "^2.431.0",
