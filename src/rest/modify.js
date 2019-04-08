@@ -79,7 +79,7 @@ const getStateObject = (req, state) => {
 };
 
 
-const processRequest = (promise, code, stateObject, res, next) => promise(code, stateObject)
+const processRequest = (promise, code, stateObject, res) => promise(code, stateObject)
   .then((result) => {
     const { action, link } = stateObject;
     if (action === ACTION.PDF) {
@@ -95,7 +95,8 @@ const processRequest = (promise, code, stateObject, res, next) => promise(code, 
     return res.redirect(`${BASE_REDIRECT}/home${redirectUrl}`);
   })
   .catch((err) => {
-    next(err);
+    const { message } = err;
+    return res.redirect(`${BASE_REDIRECT}/fail?message=${message}`);
   });
 
 
@@ -115,14 +116,14 @@ const linkedInRequest = async (code, stateObject) => {
 
 
 router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
-  (req, res, next) => {
+  (req, res) => {
     const { code, state, error } = req.query;
     if (error) {
       return res.redirect(`${BASE_REDIRECT}/sso-fail?message=${error}`);
     }
 
     const stateObject = getStateObject(req, state);
-    return processRequest(linkedInRequest, code, stateObject, res, next);
+    return processRequest(linkedInRequest, code, stateObject, res);
   });
 
 
@@ -140,12 +141,12 @@ const googleRequest = async (code, stateObject) => {
 
 
 router.get('/google', (req, res, next) => validateParams(req, next, 'code', 'state'),
-  (req, res, next) => {
+  (req, res) => {
     const { code, state } = req.query;
 
     const stateObject = getStateObject(req, state);
 
-    processRequest(googleRequest, code, stateObject, res, next);
+    processRequest(googleRequest, code, stateObject, res);
   });
 
 module.exports = router;

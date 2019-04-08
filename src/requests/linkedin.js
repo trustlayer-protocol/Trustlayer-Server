@@ -85,7 +85,7 @@ const validateUser = async (code) => {
   const profile = await getUserProfile(accessToken);
   const email = await getUserEmail(accessToken);
   if (!profile || !email) {
-    throw new AuthenticationError('Error validating with LinkedIn');
+    throw new AuthenticationError('Whoops! Looks like there was an error validating your LinkedIn account. Please try again.');
   }
 
 

@@ -9,7 +9,13 @@ const initializePool = () => {
 };
 
 
+const closePool = async () => {
+  await pool.end();
+};
+
+
 const getPool = () => pool;
 
 module.exports = getPool;
 module.exports.initializePool = initializePool;
+module.exports.closePool = closePool;

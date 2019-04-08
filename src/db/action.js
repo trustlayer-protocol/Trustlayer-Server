@@ -31,6 +31,12 @@ const getActionByLink = async (link) => {
 };
 
 
+const removeAction = async (link) => {
+  const queryText = 'DELETE from actions where link = $1';
+  await pool().query(queryText, [link]);
+};
+
+
 const createNewAction = async ({
   formId,
   formHash,
@@ -39,9 +45,10 @@ const createNewAction = async ({
   link,
   created,
   ip,
+  transactionHash,
 }) => {
-  const values = [formId, formHash, userId, action, link, ip, created];
-  const queryText = 'INSERT INTO actions(form_id, form_hash, user_id, action, link, ip, created) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+  const values = [formId, formHash, userId, action, link, ip, created, transactionHash];
+  const queryText = 'INSERT INTO actions(form_id, form_hash, user_id, action, link, ip, created, bc_transaction_hash) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
   const result = await pool().query(queryText, values);
 
   return result.rows[0];
@@ -53,4 +60,5 @@ module.exports = {
   getActionByLink,
   getActionsForUser,
   getActionById,
+  removeAction,
 };

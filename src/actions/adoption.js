@@ -8,6 +8,9 @@ const {
   sendAgreementEmails,
 } = require('../email');
 const {
+  getActionByLink,
+} = require('../db/action');
+const {
   getById: getUserbyId,
 } = require('../db/user');
 const {
@@ -17,6 +20,13 @@ const convertToPdf = require('../pdf/html-pdf');
 const {
   uploadToS3,
 } = require('../aws/nda-upload');
+const {
+  pushAdoption,
+} = require('../blockchain/transactions');
+const {
+  InvalidArgumentError,
+  ResourceNotFound,
+} = require('../utils/errors');
 
 
 const markedPromise = formMarkup => new Promise((resolve, reject) => {
@@ -34,27 +44,27 @@ const uploadAgreementPDF = async (
   agreementId,
   linkAdoption,
   adoption,
-  linkUserEmail,
-  userEmail,
+  linkUser,
+  user,
 ) => {
   const { form_id: formId } = adoption;
 
   const form = await getFormById(formId);
   const { content: formMarkup } = form;
-  const html = await markedPromise(formMarkup, linkAdoption, adoption, linkUserEmail, userEmail);
-  const buffer = await convertToPdf(html, linkAdoption, adoption, linkUserEmail, userEmail);
+  const html = await markedPromise(formMarkup);
+  const buffer = await convertToPdf(html, linkAdoption, adoption, linkUser, user);
   uploadToS3(buffer, agreementId);
 
   return buffer;
 };
 
 
-const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => {
+const completeAdoptionFromLink = async (user, linkAdoption, ip, transactionHash) => {
+  const { id: userId, email: userEmail } = user;
   const {
-    linkAdoption,
     newAdoption,
     agreement,
-  } = await createAdoptionAndAgreementFromLink(userId, adoptionLink, ip);
+  } = await createAdoptionAndAgreementFromLink(userId, linkAdoption, ip, transactionHash);
   const {
     id: agreementId,
     link: agreementLink,
@@ -67,7 +77,7 @@ const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => 
   const { email: linkUserEmail } = linkUser;
 
   const buffer = await uploadAgreementPDF(agreementId, linkAdoption,
-    newAdoption, linkUserEmail, userEmail);
+    newAdoption, linkUser, user);
   sendAgreementEmails(linkUserEmail, userEmail, agreementLink, buffer);
 
   return {
@@ -77,15 +87,28 @@ const completeAdoptionFromLink = async (userId, userEmail, adoptionLink, ip) => 
 };
 
 
+const adoptionFromLink = async (link, user, ip) => {
+  const linkAdoption = await getActionByLink(link);
+  const { user_id: linkUserId } = linkAdoption;
+  const { id: userId } = user;
+  if (linkUserId === userId) throw new InvalidArgumentError('Looks like you tried to adopt from your own link, unfortunately you can\'t do that.');
+  if (!linkAdoption) throw new ResourceNotFound(`Could not find adoption for link: '${link}'.`);
+
+  const transactionHash = await pushAdoption();
+  return completeAdoptionFromLink(user, linkAdoption, ip, transactionHash);
+};
+
+
 const completeAdoption = async (stateObject, user) => {
   let resultAction;
   const { link, form_id: formId, ip } = stateObject;
   const { id: userId, email: userEmail, link: userLink } = user;
   if (!link && formId) {
-    resultAction = await createAdoptionByFormId(userId, formId, ip);
+    const transactionHash = await pushAdoption();
+    resultAction = await createAdoptionByFormId(userId, formId, ip, transactionHash);
   }
   if (link) {
-    resultAction = await completeAdoptionFromLink(userId, userEmail, link, ip);
+    resultAction = await adoptionFromLink(link, user, ip);
   }
   sendAdoptionEmail(userEmail, userLink);
 

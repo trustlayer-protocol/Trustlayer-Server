@@ -8,6 +8,7 @@
   "license": "GNU General Public License v3.0",
   "private": false,
   "scripts": {
+    "test": "jest",
     "start": "node src/app.js",
     "deploy": "eb deploy"
   },
@@ -34,8 +35,10 @@
     "web3": "^1.0.0-beta.51"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.11",
     "eslint": "^5.15.3",
     "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.16.0"
+    "eslint-plugin-import": "^2.16.0",
+    "jest": "^24.7.1"
   }
 }
