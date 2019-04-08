@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const modify = require('./rest/modify');
 const get = require('./rest/get');
+const githubWebhook = require('./github/webhook');
 const { initializePool } = require('./db');
 
 
@@ -19,10 +20,11 @@ app.use((req, res, next) => {
 
 app.use('/modify', modify);
 app.use('/get', get);
+app.use('/github-webhook', githubWebhook);
 
 
 app.get('/', (req, res) => {
-  res.send('Hello Trustlayer');
+	res.send('Hello Trustlayer');
 });
 
 initializePool();
