@@ -27,6 +27,18 @@ const getFormById = async (id) => {
 };
 
 
+const getFormsByIds = async (ids = []) => {
+  const queryText = `
+    SELECT *
+    FROM forms
+    WHERE id IN (${ids.join(',')})
+  `;
+
+  const result = await pool().query(queryText);
+  return result.rows;
+};
+
+
 const getFormByHash = async (hash) => {
   const result = await pool().query('SELECT * from forms where hash = $1', [hash]);
 
@@ -53,6 +65,7 @@ module.exports = {
   inserForm,
   getFormByHash,
   getFormById,
+  getFormsByIds,
   getAllForms,
   getAvatarsOfFormAdopters,
   deleteForm,

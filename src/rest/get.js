@@ -3,6 +3,7 @@ const {
   getAllForms,
   getFormById,
   getAvatarsOfFormAdopters,
+  getFormsByIds,
 } = require('../db/form');
 const {
   getActionsForUser,
@@ -11,6 +12,7 @@ const {
 const {
   getByLink: getUserByLink,
   getById: getUserById,
+  getUserByEmail,
 } = require('../db/user');
 const {
   getByLink: getAgreementByLink,
@@ -18,6 +20,7 @@ const {
 } = require('../db/agreement');
 const { ResourceNotFound } = require('../utils/errors');
 const { verifyToken } = require('../security/jwt');
+const _ = require('lodash');
 
 
 const router = express.Router();
@@ -76,6 +79,29 @@ const getUserActionsAndForm = async (user, actionType, limit) => {
 
   return result;
 };
+
+
+const getUserInfoByEmail = async (email) => {
+  const user = await getUserByEmail(email);
+
+  if (!user) {
+    throw new ResourceNotFound('User not found.');
+  }
+
+  const actions = await getActionsForUser(user.id, null, null);
+  const uniqueFormActions = _.sortedUniqBy(actions, (val) => val.form_id)
+  const validFormIds = uniqueFormActions
+    .filter(action => action.action === 'adopt')
+    .map(action => action.form_id);
+
+  const userForms = await getFormsByIds(validFormIds);
+  const formsHaveType = userForms.filter(form => form.type);
+
+  return {
+    user,
+    forms: formsHaveType
+  };
+}
 
 
 const getSecureUserData = async (token) => {
@@ -143,6 +169,12 @@ const getAgreementsData = async (userId) => {
 router.get('/user/secure/:token', (req, res, next) => {
   const { token } = req.params;
   processRequest(getSecureUserData(token), res, next);
+});
+
+
+router.get('/user/email/:email', (req, res, next) => {
+  const { email } = req.params;
+  processRequest(getUserInfoByEmail(email), res, next);
 });
 
 
