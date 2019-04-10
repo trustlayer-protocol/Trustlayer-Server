@@ -8,7 +8,14 @@ const WEB_2_URL_BASE = 'https://github.com/trustlayer-protocol/Trustlayer-Univer
 const { RINKEBY_MNEMOUNIC, INFURA_RINKEBY_URL, BC_ACCOUNT_ADDRESS } = process.env;
 
 
-async function deployContract(title, author, license, terms, formName, version) {
+async function deployContract({
+  title,
+  author,
+  license,
+  terms,
+  formName,
+  version,
+}) {
   const provider = new HDWalletProvider(RINKEBY_MNEMOUNIC, INFURA_RINKEBY_URL);
   const newContract = await contract(UNDA);
 
