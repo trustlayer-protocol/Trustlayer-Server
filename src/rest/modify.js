@@ -119,7 +119,7 @@ router.get('/linkedin', (req, res, next) => validateParams(req, next, 'state'),
   (req, res) => {
     const { code, state, error } = req.query;
     if (error) {
-      return res.redirect(`${BASE_REDIRECT}/sso-fail?message=${error}`);
+      return res.redirect(`${BASE_REDIRECT}/fail?message=${error}`);
     }
 
     const stateObject = getStateObject(req, state);
